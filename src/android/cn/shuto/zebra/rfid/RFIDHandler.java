@@ -4,7 +4,28 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.zebra.rfid.api3.*;
+import com.zebra.rfid.api3.ACCESS_OPERATION_CODE;
+import com.zebra.rfid.api3.ACCESS_OPERATION_STATUS;
+import com.zebra.rfid.api3.Antennas;
+import com.zebra.rfid.api3.ENUM_TRANSPORT;
+import com.zebra.rfid.api3.ENUM_TRIGGER_MODE;
+import com.zebra.rfid.api3.HANDHELD_TRIGGER_EVENT_TYPE;
+import com.zebra.rfid.api3.INVENTORY_STATE;
+import com.zebra.rfid.api3.InvalidUsageException;
+import com.zebra.rfid.api3.OperationFailureException;
+import com.zebra.rfid.api3.RFIDReader;
+import com.zebra.rfid.api3.ReaderDevice;
+import com.zebra.rfid.api3.Readers;
+import com.zebra.rfid.api3.RfidEventsListener;
+import com.zebra.rfid.api3.RfidReadEvents;
+import com.zebra.rfid.api3.RfidStatusEvents;
+import com.zebra.rfid.api3.SESSION;
+import com.zebra.rfid.api3.SL_FLAG;
+import com.zebra.rfid.api3.START_TRIGGER_TYPE;
+import com.zebra.rfid.api3.STATUS_EVENT_TYPE;
+import com.zebra.rfid.api3.STOP_TRIGGER_TYPE;
+import com.zebra.rfid.api3.TagData;
+import com.zebra.rfid.api3.TriggerInfo;
 
 import java.util.ArrayList;
 
@@ -304,62 +325,6 @@ class RFIDHandler implements Readers.RFIDReaderEventHandler {
   public synchronized void setMaxPower(int new_power) {
     this.MAX_POWER = new_power;
   }
-
-  public void writeTag(String sourceEPC, String Password, String targetData, int offset, String type) {
-    Log.d(TAG, "WriteTag " + targetData);
-    try {
-      MEMORY_BANK memory_bank = MEMORY_BANK.MEMORY_BANK_EPC;
-      if (type == "EPC") {
-         memory_bank = MEMORY_BANK.MEMORY_BANK_EPC;
-      } else if (type == "USER") {
-         memory_bank = MEMORY_BANK.MEMORY_BANK_USER;
-      } else if(type == "PASSWORD") {
-         memory_bank = MEMORY_BANK.MEMORY_BANK_RESERVED;
-      } else {
-         memory_bank = MEMORY_BANK.MEMORY_BANK_EPC;
-      }
-      TagData tagData = null;
-      String tagId = sourceEPC;
-      TagAccess tagAccess = new TagAccess();
-      TagAccess.WriteAccessParams writeAccessParams = tagAccess.new WriteAccessParams();
-      String writeData = targetData; //write data in string
-      writeAccessParams.setAccessPassword(Long.parseLong(Password, 16));
-      writeAccessParams.setMemoryBank(memory_bank);
-      writeAccessParams.setOffset(offset); // start writing from word offset 0
-      writeAccessParams.setWriteData(writeData);
-      // set retries in case of partial write happens
-      writeAccessParams.setWriteRetries(3);
-      // data length in words
-      writeAccessParams.setWriteDataLength(writeData.length() / 4);
-      // 5th parameter bPrefilter flag is true which means API will apply pre filter internally
-      // 6th parameter should be true in case of changing EPC ID it self i.e. source and target both is EPC
-      boolean useTIDfilter = memory_bank == MEMORY_BANK.MEMORY_BANK_EPC;
-      reader.Actions.TagAccess.writeWait(tagId, writeAccessParams, null, tagData, true, useTIDfilter);
-    } catch (InvalidUsageException e) {
-      e.printStackTrace();
-    } catch (OperationFailureException e) {
-      e.printStackTrace();
-    }
-  }
-
-  public void lockTag(String sourceEPC) {
-    try {
-      TagAccess tagAccess = new TagAccess();
-      TagAccess.LockAccessParams lockAccessParams = tagAccess.new
-      LockAccessParams();
-      /* lock now */
-      lockAccessParams.setLockPrivilege(LOCK_DATA_FIELD.LOCK_EPC_MEMORY,
-      LOCK_PRIVILEGE.LOCK_PRIVILEGE_PERMA_LOCK);
-      lockAccessParams.setAccessPassword(0);
-      reader.Actions.TagAccess.lockWait(sourceEPC, lockAccessParams, null);
-    } catch (InvalidUsageException e) {
-        e.printStackTrace();
-    } catch (OperationFailureException e) {
-        e.printStackTrace();
-    }
-  }
-
-  
 
   // Read/Status Notify handler
   // Implement the RfidEventsLister class to receive event notifications
