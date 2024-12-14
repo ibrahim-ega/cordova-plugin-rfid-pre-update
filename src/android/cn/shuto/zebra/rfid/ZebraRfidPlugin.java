@@ -153,37 +153,37 @@ public class ZebraRfidPlugin extends CordovaPlugin {
 
   RFIDCallBack callBack = new RFIDCallBack() {
     @Override
-    public void handleTagData(TagData[] tagData) {
-      // --
-      // --
-      if (isHandle) {
+public void handleTagData(TagData[] tagData) {
+    if (isHandle) {
         return;
-      }
-      isHandle = true;
-      for (TagData tagDatum : tagData) {
+    }
+    isHandle = true;
+    for (TagData tagDatum : tagData) {
         if (tagIdSet.contains(tagDatum.getTagID())) {
-          isSend = false;
-          break;
+            isSend = false;
+            break;
         } else {
-          tagIdSet.add(tagDatum.getTagID());
-          isSend = true;
+            tagIdSet.add(tagDatum.getTagID());
+            isSend = true;
         }
-      }
-      if (isSend && !tagIdSet.isEmpty()) {
-        // --
+    }
+    if (isSend && !tagIdSet.isEmpty()) {
         JSONObject obj = new JSONObject();
         try {
-          obj.put("code", "1");
-          obj.put("data", tagIdSet);
-          PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
-          result.setKeepCallback(true);
-          mCallbackContext.sendPluginResult(result);
+            obj.put("code", "1");
+            // Convert to a JSONArray or String
+            JSONArray tagArray = new JSONArray(tagIdSet);
+            obj.put("data", tagArray);
+            PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
+            result.setKeepCallback(true);
+            mCallbackContext.sendPluginResult(result);
         } catch (JSONException e) {
-          mCallbackContext.error(e.getMessage());
+            mCallbackContext.error(e.getMessage());
         }
-      }
-      isHandle = false;
     }
+    isHandle = false;
+}
+
 
     @Override
     public void handleTriggerPress(boolean pressed) {
